@@ -1,0 +1,17 @@
+# Gradle
+.gradle/
+.kotlin/
+build/
+app/build/
+
+# Native build artifacts
+bin/
+
+# Android / IDE
+local.properties
+.idea/
+*.iml
+captures/
+
+# macOS
+.DS_Store

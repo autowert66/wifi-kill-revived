@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">WiFiKill</string>
+    <string name="no_hosts">Scan the network (press the button below)</string>
+    <string name="scan">Scan</string>
+    <string name="root_required">Root access is required to scan and kill devices. Run on a rooted device with su available.</string>
+    <string name="scan_failed">Scan failed: root unavailable or raw sockets blocked.</string>
+    <string name="kill_failed">Could not start ARP spoof (gateway MAC not found).</string>
+</resources>
