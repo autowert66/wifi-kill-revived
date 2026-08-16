@@ -2,8 +2,8 @@ package dev.a99.wifikill
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.selects.select
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import java.io.ByteArrayOutputStream
 import java.net.DatagramPacket
 import java.net.DatagramSocket
@@ -13,29 +13,18 @@ import java.nio.ByteOrder
 
 class HostnameResolver {
 
-    suspend fun resolve(ip: String): String? = try {
+    suspend fun resolve(ip: String): String? = withTimeoutOrNull(3000) {
         coroutineScope {
-            val reverse = async { strategyReverseDns(ip) }
-            val mdns = async { strategyMdns(ip) }
-            val netbios = async { strategyNetbios(ip) }
-
-            // First strategy to produce a non-null name wins; otherwise null
-            // once all three complete (their own timeouts bound total time).
-            var result: String? = null
-            var remaining = 3
-            while (remaining > 0 && result == null) {
-                val (name, cb) = select<Pair<String?, Boolean>> {
-                    reverse.onAwait { it to true }
-                    mdns.onAwait { it to false }
-                    netbios.onAwait { it to false }
-                }
-                remaining--
-                if (!cb && name != null) result = name
-            }
-            result
+            val strategies = listOf(
+                async { strategyReverseDns(ip) },
+                async { strategyMdns(ip) },
+                async { strategyNetbios(ip) },
+            )
+            // Strategies run in parallel; each bounds itself with its own
+            // timeout. Return the first non-null result, preferring the order
+            // reverse DNS -> mDNS -> NetBIOS.
+            strategies.firstNotNullOfOrNull { it.await() }
         }
-    } catch (_: Exception) {
-        null
     }
 
     private suspend fun strategyReverseDns(ip: String): String? = try {

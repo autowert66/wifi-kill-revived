@@ -11,7 +11,7 @@ import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import dev.a99.wifikill.databinding.ActivityMainBinding
 import dev.a99.wifikill.model.Host
-import dev.a99.wifikill.HostListAdapter
+import dev.a99.wifikill.ui.HostListAdapter
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {

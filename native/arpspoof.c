@@ -15,7 +15,11 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#include <stdlib.h>
+
+/* 14-byte Ethernet header + 28-byte ARP payload padded to the 60-byte
+ * Ethernet minimum frame size (ETH_ZLEN); some Wi-Fi firmware drops runt
+ * frames smaller than this. */
+#define FRAME_LEN 60
 
 typedef struct { unsigned char addr[6]; } mac_t;
 
@@ -23,8 +27,8 @@ static int  g_sock = -1;
 static int  g_ifindex;
 static char g_ifname[IFNAMSIZ];
 static mac_t g_own_mac;
-static uint8_t g_spoof_frame[42];
-static uint8_t g_restore_frame[42];
+static uint8_t g_spoof_frame[FRAME_LEN];
+static uint8_t g_restore_frame[FRAME_LEN];
 static volatile sig_atomic_t g_restore_count = 0;
 
 static uint32_t ip_from_str(const char *s) { return ntohl(inet_addr(s)); }

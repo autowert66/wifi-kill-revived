@@ -3,7 +3,6 @@ package dev.a99.wifikill
 import android.content.Context
 import dev.a99.wifikill.model.Host
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.withContext
@@ -77,27 +76,21 @@ class NetworkScanner(private val context: Context) {
         val binary = deployBinary("arpscan")
         val cmd = "${binary.absolutePath} ${info.iface} ${info.gatewayIp} ${info.prefixLen}"
         val proc = RootExecutor.startPersistent(cmd)
-            val reader = proc.childOutput()
-            if (reader != null) {
-                var lastLine = System.currentTimeMillis()
-                while (true) {
-                    val line = reader.readLine() ?: break
-                    lastLine = System.currentTimeMillis()
-                    val parts = line.trim().split(Regex("\\s+"))
-                    if (parts.size >= 2) {
-                        val mac = parts[1]
-                        if (mac != "00:00:00:00:00:00") {
-                            send(Host(ip = parts[0], mac = mac))
-                        }
+        val reader = proc.childOutput()
+        if (reader != null) {
+            while (true) {
+                val line = reader.readLine() ?: break
+                val parts = line.trim().split(Regex("\\s+"))
+                if (parts.size >= 2) {
+                    val mac = parts[1]
+                    if (mac != "00:00:00:00:00:00") {
+                        send(Host(ip = parts[0], mac = mac))
                     }
                 }
-                // Give any in-flight hosts a brief grace period after EOF.
-                while (System.currentTimeMillis() - lastLine < 1000) {
-                    delay(50)
-                }
-            } else {
-                throw IOException("no output stream from arpscan")
             }
-            proc.kill()
+        } else {
+            throw IOException("no output stream from arpscan")
+        }
+        proc.kill()
     }
 }

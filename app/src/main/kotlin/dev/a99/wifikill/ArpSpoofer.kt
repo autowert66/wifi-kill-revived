@@ -50,6 +50,10 @@ class ArpSpoofer(private val context: Context) {
             "${networkInfo.gatewayIp} $gatewayMac"
         val proc = RootExecutor.startPersistent(cmd)
         Thread.sleep(200)
+        if (proc.pid <= 0 || !proc.isAlive) {
+            proc.kill()
+            return@withContext false
+        }
         activeProcesses[host.ip] = proc
         true
     }

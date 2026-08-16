@@ -35,27 +35,51 @@ object RootExecutor {
         }
 
     /**
-     * Launch a non-blocking process that keeps running in the background.
-     * The returned handle keeps a reference to both the `sh` parent and the
-     * exec'd child process so stdout can be streamed and the pid recovered.
+     * Launch a command as root in the background and keep its stdout readable.
+     *
+     * The command is started under `su` with `&` so `su` returns immediately;
+     * its real (root) pid is echoed to stderr and captured so callers can later
+     * deliver SIGTERM directly. This matters for `arpspoof`, whose SIGTERM
+     * handler restores the victim's ARP cache before exiting.
+     *
+     * Returns a handle with the pid and the single underlying [Process]. If the
+     * command never starts, [PersistentProcess.pid] is -1.
      */
     fun startPersistent(cmd: String): PersistentProcess {
-        val sh = Runtime.getRuntime().exec(arrayOf("sh", "-c", "$cmd & echo \$!"))
-        val pidLine = BufferedReader(InputStreamReader(sh.inputStream)).readLine()?.trim()
-        val pid = pidLine?.filter { it.isDigit() }?.toIntOrNull() ?: -1
-        val child = Runtime.getRuntime().exec(arrayOf("su", "-c", cmd))
-        return PersistentProcess(pid = pid, sh = sh, child = child)
+        val process = Runtime.getRuntime().exec(
+            arrayOf("su", "-c", "$cmd & echo \"\$!\" >&2")
+        )
+        val err = process.errorStream.bufferedReader()
+        val pid = err.readLine()?.trim()?.toIntOrNull() ?: -1
+        // Drain remaining stderr in the background so the child never blocks
+        // once the pipe buffer fills up.
+        val drainer = Thread {
+            runCatching { while (err.readLine() != null) { /* discard */ } }
+        }.apply { isDaemon = true }
+        drainer.start()
+        return PersistentProcess(pid = pid, process = process)
     }
 
     class PersistentProcess(
         val pid: Int,
-        private val sh: Process? = null,
-        private val child: Process? = null,
+        private val process: Process,
     ) {
 
-        fun childOutput(): BufferedReader? = child?.inputStream?.bufferedReader()
+        fun childOutput(): BufferedReader? = process.inputStream.bufferedReader()
 
-        fun childError(): BufferedReader? = child?.errorStream?.bufferedReader()
+        fun childError(): BufferedReader? = process.errorStream.bufferedReader()
+
+        val isAlive: Boolean
+            get() = if (pid <= 0) {
+                false
+            } else {
+                try {
+                    val p = Runtime.getRuntime().exec(arrayOf("su", "-c", "kill -0 $pid"))
+                    p.waitFor() == 0
+                } catch (_: Exception) {
+                    false
+                }
+            }
 
         fun kill() {
             if (pid > 0) {
@@ -65,13 +89,7 @@ object RootExecutor {
                 } catch (_: Exception) {
                 }
             }
-            child?.destroy()
-            child?.destroyForcibly()
-            sh?.destroy()
-            sh?.destroyForcibly()
+            process.destroy()
         }
-
-        val isAlive: Boolean
-            get() = child?.isAlive == true || sh?.isAlive == true
     }
 }

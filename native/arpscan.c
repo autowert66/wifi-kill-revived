@@ -96,7 +96,8 @@ static void record(uint32_t ip, const mac_t *mac) {
 }
 
 static void send_request(uint32_t target_ip) {
-    uint8_t frame[42];
+    uint8_t frame[60];
+    memset(frame, 0, sizeof(frame));
     mac_t zero_mac = {{0, 0, 0, 0, 0, 0}};
     uint32_t ip_n = htonl(target_ip);
     build_arp_frame(frame, ARPOP_REQUEST, g_own_ip, &g_own_mac, ip_n, &zero_mac);

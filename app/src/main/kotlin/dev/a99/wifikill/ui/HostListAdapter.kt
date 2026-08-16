@@ -1,4 +1,4 @@
-package dev.a99.wifikill
+package dev.a99.wifikill.ui
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
