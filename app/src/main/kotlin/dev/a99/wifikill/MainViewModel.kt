@@ -97,24 +97,35 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun toggleKill(host: Host, kill: Boolean) {
+        viewModelScope.launch { setKill(host, kill) }
+    }
+
+    fun toggleAll(kill: Boolean) {
         viewModelScope.launch {
-            if (kill) {
-                val ok = try {
-                    spoofer.kill(host)
-                } catch (e: Exception) {
-                    false
-                }
-                if (!ok) {
-                    _events.emit(Event.KillFailed)
-                    return@launch
-                }
-                updateHost(host.ip) { it.copy(isKilled = true) }
-                killedIps.add(host.ip)
-            } else {
-                spoofer.unkill(host)
-                killedIps.remove(host.ip)
-                updateHost(host.ip) { it.copy(isKilled = false) }
+            val targets = synchronized(hostsMutex) { _hosts.value.toList() }
+            for (host in targets) {
+                if (host.isKilled != kill) setKill(host, kill)
             }
+        }
+    }
+
+    private suspend fun setKill(host: Host, kill: Boolean) {
+        if (kill) {
+            val ok = try {
+                spoofer.kill(host)
+            } catch (e: Exception) {
+                false
+            }
+            if (!ok) {
+                _events.emit(Event.KillFailed)
+                return
+            }
+            updateHost(host.ip) { it.copy(isKilled = true) }
+            killedIps.add(host.ip)
+        } else {
+            spoofer.unkill(host)
+            killedIps.remove(host.ip)
+            updateHost(host.ip) { it.copy(isKilled = false) }
         }
     }
 
