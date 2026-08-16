@@ -23,15 +23,28 @@ object OuiLookup {
         }
     }
 
-    fun lookup(mac: String): String? {
-        val prefix = mac
-            .replace("-", ":")
-            .trim()
-            .let { runCatching { it.substring(0, 8) }.getOrDefault("") }
-            .uppercase()
-        if (prefix.length != 8 || !prefix.all { c -> c.isDigit() || c in 'A'..'F' }) return null
-        return cache[prefix]
-    }
+    fun lookup(mac: String): String? = matchPrefix(cache, mac)
 
     fun isReady(): Boolean = cache.isNotEmpty()
+
+    /**
+     * Strip separators and lowercase hex, returning the 12 uppercase hex digits
+     * of a well-formed MAC, or null if the input is not a full MAC.
+     */
+    internal fun normalizeMac(mac: String): String? {
+        val hex = mac.filter { it in '0'..'9' || it in 'a'..'f' || it in 'A'..'F' }
+        return hex.uppercase().takeIf { it.length == 12 }
+    }
+
+    /**
+     * Longest-prefix match against a map of OUI prefixes. Prefixes are hex
+     * digit strings of length 9 (MA-S /36), 7 (MA-M /28) or 6 (MA-L /24).
+     */
+    internal fun matchPrefix(oui: Map<String, String>, mac: String): String? {
+        val hex = normalizeMac(mac) ?: return null
+        for (len in intArrayOf(9, 7, 6)) {
+            oui[hex.substring(0, len)]?.let { return it }
+        }
+        return null
+    }
 }
