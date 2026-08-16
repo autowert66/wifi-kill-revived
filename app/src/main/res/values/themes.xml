@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.WifiKill" parent="Theme.Material3.DayNight.NoActionBar">
+    <style name="Theme.WifiKill" parent="Theme.Material3.Dark.NoActionBar">
         <item name="colorPrimary">@color/primary</item>
+        <item name="colorSurface">@color/background</item>
+        <item name="android:windowBackground">@color/background</item>
     </style>
 </resources>

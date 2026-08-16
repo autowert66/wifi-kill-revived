@@ -1,7 +1,9 @@
 package dev.a99.wifikill
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
 import kotlinx.coroutines.withTimeoutOrNull
 import java.io.ByteArrayOutputStream
@@ -13,17 +15,19 @@ import java.nio.ByteOrder
 
 class HostnameResolver {
 
-    suspend fun resolve(ip: String): String? = withTimeoutOrNull(3000) {
-        coroutineScope {
-            val strategies = listOf(
-                async { strategyReverseDns(ip) },
-                async { strategyMdns(ip) },
-                async { strategyNetbios(ip) },
-            )
-            // Strategies run in parallel; each bounds itself with its own
-            // timeout. Return the first non-null result, preferring the order
-            // reverse DNS -> mDNS -> NetBIOS.
-            strategies.firstNotNullOfOrNull { it.await() }
+    suspend fun resolve(ip: String): String? = withContext(Dispatchers.IO) {
+        withTimeoutOrNull(3000) {
+            coroutineScope {
+                val strategies = listOf(
+                    async { strategyReverseDns(ip) },
+                    async { strategyMdns(ip) },
+                    async { strategyNetbios(ip) },
+                )
+                // Strategies run in parallel; each bounds itself with its own
+                // timeout. Return the first non-null result, preferring the
+                // order reverse DNS -> mDNS -> NetBIOS.
+                strategies.firstNotNullOfOrNull { it.await() }
+            }
         }
     }
 

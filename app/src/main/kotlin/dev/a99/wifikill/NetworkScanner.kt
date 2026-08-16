@@ -128,25 +128,29 @@ class NetworkScanner(private val context: Context) {
     }
 
     fun scan(): Flow<Host> = channelFlow {
-        val info = getNetworkInfo()
-        val binary = deployBinary("arpscan")
-        val cmd = "${binary.absolutePath} ${info.iface} ${info.gatewayIp} ${info.prefixLen}"
-        val proc = RootExecutor.startPersistent(cmd)
-        val reader = proc.childOutput()
-        if (reader != null) {
-            while (true) {
-                val line = reader.readLine() ?: break
-                val parts = line.trim().split(Regex("\\s+"))
-                if (parts.size >= 2) {
-                    val mac = parts[1]
-                    if (mac != "00:00:00:00:00:00") {
-                        send(Host(ip = parts[0], mac = mac))
+        // All of this is blocking I/O (binder calls, process spawning, pipe
+        // reads); run it off the main thread so the UI stays responsive.
+        withContext(Dispatchers.IO) {
+            val info = getNetworkInfo()
+            val binary = deployBinary("arpscan")
+            val cmd = "${binary.absolutePath} ${info.iface} ${info.gatewayIp} ${info.prefixLen}"
+            val proc = RootExecutor.startPersistent(cmd)
+            val reader = proc.childOutput()
+            if (reader != null) {
+                while (true) {
+                    val line = reader.readLine() ?: break
+                    val parts = line.trim().split(Regex("\\s+"))
+                    if (parts.size >= 2) {
+                        val mac = parts[1]
+                        if (mac != "00:00:00:00:00:00") {
+                            send(Host(ip = parts[0], mac = mac))
+                        }
                     }
                 }
+            } else {
+                throw IOException("no output stream from arpscan")
             }
-        } else {
-            throw IOException("no output stream from arpscan")
+            proc.kill()
         }
-        proc.kill()
     }
 }

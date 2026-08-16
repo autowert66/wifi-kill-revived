@@ -86,6 +86,7 @@ static int dedupe(uint32_t ip) {
 
 static void record(uint32_t ip, const mac_t *mac) {
     if (g_result_count >= g_nr_hosts) return;
+    if ((ip & g_mask) != g_net) return;        // outside scanned subnet
     if (!(ip & g_hostmask)) return;          // skip network addr
     if ((ip | g_hostmask) == 0xffffffffu) return; // skip broadcast
     if (ip == g_own_ip) return;              // skip self
@@ -93,6 +94,17 @@ static void record(uint32_t ip, const mac_t *mac) {
     g_results_ip[g_result_count] = ip;
     g_results_mac[g_result_count] = *mac;
     g_result_count++;
+
+    // Stream each discovery immediately so the UI can show hosts live.
+    // stdout is a pipe (fully buffered by default), so flush after each line.
+    char ipstr[INET_ADDRSTRLEN];
+    struct in_addr a;
+    a.s_addr = htonl(ip);
+    inet_ntop(AF_INET, &a, ipstr, sizeof(ipstr));
+    printf("%s %02x:%02x:%02x:%02x:%02x:%02x\n", ipstr,
+           mac->addr[0], mac->addr[1], mac->addr[2],
+           mac->addr[3], mac->addr[4], mac->addr[5]);
+    fflush(stdout);
 }
 
 static void send_request(uint32_t target_ip) {
@@ -202,15 +214,7 @@ int main(int argc, char **argv) {
     }
     collect(1500);
 
-    for (int i = 0; i < g_result_count; i++) {
-        char ipstr[INET_ADDRSTRLEN];
-        struct in_addr a;
-        a.s_addr = htonl(g_results_ip[i]);
-        inet_ntop(AF_INET, &a, ipstr, sizeof(ipstr));
-        printf("%s %02x:%02x:%02x:%02x:%02x:%02x\n", ipstr,
-               g_results_mac[i].addr[0], g_results_mac[i].addr[1],
-               g_results_mac[i].addr[2], g_results_mac[i].addr[3],
-               g_results_mac[i].addr[4], g_results_mac[i].addr[5]);
-    }
+    // Results are already streamed to stdout as they are discovered.
+    fflush(stdout);
     return 0;
 }

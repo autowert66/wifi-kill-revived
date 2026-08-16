@@ -10,16 +10,21 @@ object RootExecutor {
 
     data class ExecResult(val stdout: List<String>, val exitCode: Int)
 
-    private fun isRootAvailable(): Boolean = try {
-        val p = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
-        val out = p.inputStream.bufferedReader().readText().trim()
-        p.waitFor()
-        out.contains("uid=0")
-    } catch (_: Exception) {
-        false
+    /**
+     * Check for a working `su`. This blocks on `su -c id` (and may wait on a
+     * grant prompt), so it runs on [Dispatchers.IO] and must be called from a
+     * coroutine, never the main thread.
+     */
+    suspend fun requireRoot(): Boolean = withContext(Dispatchers.IO) {
+        try {
+            val p = Runtime.getRuntime().exec(arrayOf("su", "-c", "id"))
+            val out = p.inputStream.bufferedReader().readText().trim()
+            p.waitFor()
+            out.contains("uid=0")
+        } catch (_: Exception) {
+            false
+        }
     }
-
-    fun requireRoot(): Boolean = isRootAvailable()
 
     suspend fun exec(cmd: String, timeoutMs: Long = 5000): ExecResult =
         withContext(Dispatchers.IO) {
@@ -35,19 +40,18 @@ object RootExecutor {
         }
 
     /**
-     * Launch a command as root in the background and keep its stdout readable.
+     * Launch a command as root and keep its stdout readable.
      *
-     * The command is started under `su` with `&` so `su` returns immediately;
-     * its real (root) pid is echoed to stderr and captured so callers can later
-     * deliver SIGTERM directly. This matters for `arpspoof`, whose SIGTERM
-     * handler restores the victim's ARP cache before exiting.
-     *
-     * Returns a handle with the pid and the single underlying [Process]. If the
-     * command never starts, [PersistentProcess.pid] is -1.
+     * The command is started under `su` with `&` so we can capture its real pid
+     * (echoed to stderr), then `wait` keeps the `su` shell alive as the parent
+     * until the command exits. Without `wait`, `su` exits immediately and its
+     * backgrounded child gets killed (SIGHUP) partway through, so `arpscan`
+     * would only report a fraction of the hosts. The pid matters for `arpspoof`,
+     * whose SIGTERM handler restores the victim's ARP cache before exiting.
      */
     fun startPersistent(cmd: String): PersistentProcess {
         val process = Runtime.getRuntime().exec(
-            arrayOf("su", "-c", "$cmd & echo \"\$!\" >&2")
+            arrayOf("su", "-c", "$cmd & echo \"\$!\" >&2; wait")
         )
         val err = process.errorStream.bufferedReader()
         val pid = err.readLine()?.trim()?.toIntOrNull() ?: -1
@@ -83,13 +87,19 @@ object RootExecutor {
 
         fun kill() {
             if (pid > 0) {
-                try {
-                    Runtime.getRuntime().exec(arrayOf("su", "-c", "kill -TERM $pid"))
-                        .waitFor(2, TimeUnit.SECONDS)
-                } catch (_: Exception) {
-                }
+                // Deliver SIGTERM off the calling thread; `su -c kill` is quick
+                // but spawning `su` must not block the UI thread. arpspoof's
+                // SIGTERM handler restores the victim's ARP cache, then exits;
+                // its `wait` in startPersistent returns and the su shell exits.
+                val target = pid
+                Thread {
+                    try {
+                        Runtime.getRuntime().exec(arrayOf("su", "-c", "kill -TERM $target"))
+                            .waitFor(2, TimeUnit.SECONDS)
+                    } catch (_: Exception) {
+                    }
+                }.apply { isDaemon = true }.start()
             }
-            process.destroy()
         }
     }
 }

@@ -12,7 +12,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import dev.a99.wifikill.databinding.ActivityMainBinding
 import dev.a99.wifikill.model.Host
 import dev.a99.wifikill.ui.HostListAdapter
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class MainActivity : AppCompatActivity() {
 
@@ -26,8 +28,13 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        OuiLookup.init(this)
-        if (!RootExecutor.requireRoot()) showRootDialog()
+        lifecycleScope.launch {
+            val rooted = withContext(Dispatchers.IO) {
+                OuiLookup.init(this@MainActivity)
+                RootExecutor.requireRoot()
+            }
+            if (!rooted) showRootDialog()
+        }
 
         adapter = HostListAdapter { host, checked ->
             viewModel.toggleKill(host, checked)
