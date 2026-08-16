@@ -31,6 +31,7 @@
                     android:id="@+id/scanProgress"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
                     android:visibility="invisible"
                     android:indeterminate="true"
                     app:indicatorColor="?attr/colorPrimary"
