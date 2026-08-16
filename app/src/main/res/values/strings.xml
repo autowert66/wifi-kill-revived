@@ -13,7 +13,10 @@
 
     <string name="about_title">About WiFiKill</string>
     <string name="about_version">Version %1$s</string>
-    <string name="about_body">WiFiKill revives the classic WiFiKill utility. Scan your local network, identify connected devices by MAC and vendor, and selectively block their connectivity using ARP spoofing.</string>
-    <string name="about_disclaimer">This tool requires root access and should only be used on networks you own or are authorised to test.</string>
+    <string name="about_body">WiFiKill revives the classic WiFiKill utility for modern Android. It lets you discover every device connected to your local network, identify them by MAC address and vendor, and selectively cut off their connection — all from your phone.</string>
+    <string name="about_disclaimer">This tool requires root access and should only be used on networks you own or are authorised to test. Blocking other people\u2019s devices without permission is disruptive and may be unlawful.</string>
     <string name="about_license">Licensed under the GPLv3. Use responsibly.</string>
+
+    <string name="how_it_works_title">How it works</string>
+    <string name="how_it_works_body">Tapping the scan button sweeps the local subnet using ARP requests and reports back each device\u2019s IP, MAC address, hostname and manufacturer. When you toggle a device\u2019s kill switch, WiFiKill launches an ARP spoofing session that constantly re-announces your phone as the network gateway, so the target\u2019s traffic gets routed into a black hole instead of reaching the router. Flipping the switch off stops the spoof and restores the device\u2019s normal connectivity.</string>
 </resources>

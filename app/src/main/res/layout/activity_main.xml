@@ -27,14 +27,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
-                <ProgressBar
+                <com.google.android.material.progressindicator.LinearProgressIndicator
                     android:id="@+id/scanProgress"
-                    style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:visibility="invisible"
                     android:indeterminate="true"
-                    android:indeterminateTint="?attr/colorPrimary"
-                    android:visibility="gone"
+                    app:indicatorColor="?attr/colorPrimary"
+                    app:trackColor="?attr/colorSurfaceContainerHighest"
+                    app:trackCornerRadius="2dp"
+                    app:trackThickness="4dp"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"/>
@@ -95,7 +97,7 @@
                     android:layout_height="0dp"
                     android:clipToPadding="false"
                     android:paddingTop="8dp"
-                    android:paddingBottom="88dp"
+                    android:paddingBottom="96dp"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
                     app:layout_constraintTop_toBottomOf="@id/killAllCard"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -104,11 +106,12 @@
 
                 <TextView
                     android:id="@+id/emptyView"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:gravity="center"
                     android:text="@string/no_hosts"
                     android:textColor="?attr/colorOnSurfaceVariant"
+                    android:lineSpacingExtra="4dp"
                     android:paddingHorizontal="32dp"
                     app:layout_constraintTop_toBottomOf="@id/killAllCard"
                     app:layout_constraintBottom_toBottomOf="parent"
@@ -186,6 +189,39 @@
                                 android:textColor="?attr/colorOnSurfaceVariant"/>
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="16dp"
+                        app:cardBackgroundColor="?attr/colorSurfaceContainer"
+                        app:cardCornerRadius="16dp"
+                        app:cardElevation="0dp">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:padding="20dp">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/how_it_works_title"
+                                android:textSize="16sp"
+                                android:textStyle="bold"
+                                android:textColor="?attr/colorOnSurface"/>
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="8dp"
+                                android:text="@string/how_it_works_body"
+                                android:textSize="14sp"
+                                android:lineSpacingExtra="4dp"
+                                android:textColor="?attr/colorOnSurfaceVariant"/>
+                        </LinearLayout>
+                    </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>
             </ScrollView>
         </FrameLayout>
@@ -204,7 +240,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|end"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="88dp"
+        android:layout_marginBottom="96dp"
         android:contentDescription="@string/scan"
         android:src="@drawable/ic_wifi"/>
 </FrameLayout>
