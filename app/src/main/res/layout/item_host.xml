@@ -45,13 +45,18 @@
                 android:maxLines="1"/>
 
             <com.google.android.material.textview.MaterialTextView
-                android:id="@+id/secondaryText"
+                android:id="@+id/manufacturerText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:ellipsize="end"
-                android:maxLines="1"/>
+                android:textColor="?attr/colorOnSurface"/>
+
+            <com.google.android.material.textview.MaterialTextView
+                android:id="@+id/ipText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textAppearance="?attr/textAppearanceBodyMedium"
+                android:textColor="?attr/colorOnSurfaceVariant"/>
 
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/macText"

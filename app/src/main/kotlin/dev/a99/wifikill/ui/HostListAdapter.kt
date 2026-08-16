@@ -1,6 +1,7 @@
 package dev.a99.wifikill.ui
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -24,10 +25,11 @@ class HostListAdapter(
         val host = getItem(position)
         val b = holder.binding
         b.titleText.text = host.hostname ?: host.ip
-        b.secondaryText.text = listOfNotNull(
-            host.ip,
-            host.manufacturer,
-        ).joinToString(" · ")
+        b.manufacturerText.visibility =
+            if (host.manufacturer != null) View.VISIBLE else View.GONE
+        b.manufacturerText.text = host.manufacturer
+        b.ipText.visibility = if (host.hostname != null) View.VISIBLE else View.GONE
+        b.ipText.text = host.ip
         b.macText.text = host.mac
 
         b.killSwitch.setOnCheckedChangeListener(null)
