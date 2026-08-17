@@ -66,9 +66,13 @@ class NetworkScanner(private val context: Context) {
         return wifi?.let { cm.getLinkProperties(it) }
     }
 
-    private fun isWifi(cm: ConnectivityManager, network: Network): Boolean =
-        cm.getNetworkCapabilities(network)
-            ?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+    private fun isWifi(cm: ConnectivityManager, network: Network): Boolean {
+        val caps = cm.getNetworkCapabilities(network) ?: return false
+        // A VPN riding on top of Wi-Fi reports TRANSPORT_WIFI *and* TRANSPORT_VPN;
+        // only the underlying Wi-Fi network has WIFI without VPN.
+        return caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
+            !caps.hasTransport(NetworkCapabilities.TRANSPORT_VPN)
+    }
 
     private fun gateway(lp: LinkProperties?): String? {
         val viaRoute = lp?.routes
