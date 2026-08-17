@@ -28,10 +28,12 @@ class ArpSpoofer(private val context: Context) {
     private fun getNetworkInfo(): NetworkScanner.NetworkInfo =
         NetworkScanner(context).getNetworkInfo()
 
-    fun getGatewayMac(gatewayIp: String): String? {
-        val source = File("/proc/net/arp")
-        if (!source.exists()) return null
-        return source.readLines()
+    suspend fun getGatewayMac(gatewayIp: String): String? {
+        // /proc/net/arp is not readable by apps on modern Android (SELinux),
+        // so read it through root.
+        val result = RootExecutor.exec("cat /proc/net/arp")
+        if (result.exitCode != 0) return null
+        return result.stdout
             .drop(1)
             .firstOrNull { it.startsWith(gatewayIp + " ") }
             ?.split(Regex("\\s+"))
