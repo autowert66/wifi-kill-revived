@@ -13,5 +13,10 @@ local.properties
 *.iml
 captures/
 
+# Signing
+keystore.properties
+*.keystore
+*.jks
+
 # macOS
 .DS_Store

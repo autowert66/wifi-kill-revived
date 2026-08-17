@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -15,10 +18,41 @@ android {
         versionName = "0.1.0"
     }
 
+    signingConfigs {
+        // Resolve signing credentials from keystore.properties (local) or
+        // environment variables (CI). Neither the keystore nor the passwords
+        // are committed to the repository.
+        val props = Properties().apply {
+            val f = rootProject.file("keystore.properties")
+            if (f.exists()) FileInputStream(f).use { load(it) }
+        }
+        val storeFile = props.getProperty("storeFile") ?: System.getenv("KEYSTORE_PATH")
+        val storePassword = props.getProperty("storePassword") ?: System.getenv("KEYSTORE_PASSWORD")
+        val keyAlias = props.getProperty("keyAlias") ?: System.getenv("KEY_ALIAS")
+        val keyPassword = props.getProperty("keyPassword") ?: System.getenv("KEY_PASSWORD")
+
+        if (!storeFile.isNullOrBlank() && !storePassword.isNullOrBlank()) {
+            create("release") {
+                this.storeFile = rootProject.file(storeFile)
+                this.storePassword = storePassword
+                this.keyAlias = keyAlias ?: "wifikill"
+                this.keyPassword = keyPassword ?: storePassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
         }
+    }
+
+    // Sign both debug and release with the same release key when one is
+    // configured, so debug and release builds are interchangeable.
+    val releaseSigning = signingConfigs.findByName("release")
+    if (releaseSigning != null) {
+        buildTypes.getByName("release").signingConfig = releaseSigning
+        buildTypes.getByName("debug").signingConfig = releaseSigning
     }
 
     compileOptions {
