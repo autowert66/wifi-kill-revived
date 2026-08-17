@@ -50,10 +50,13 @@ static void build_arp_frame(uint8_t *frame, uint16_t opcode,
     arp->ar_pln = 4;
     arp->ar_op  = htons(opcode);
 
+    // IP addresses must be on the wire in network byte order.
+    uint32_t s_ip = htonl(sender_ip);
+    uint32_t t_ip = htonl(target_ip);
     memcpy(payload, sender_mac, 6);          // sender hw
-    memcpy(payload + 6, &sender_ip, 4);      // sender proto
+    memcpy(payload + 6, &s_ip, 4);           // sender proto
     memcpy(payload + 10, target_mac, 6);     // target hw
-    memcpy(payload + 16, &target_ip, 4);     // target proto
+    memcpy(payload + 16, &t_ip, 4);          // target proto
 }
 
 static int parse_arp_packet(const uint8_t *buf, int len,
@@ -111,8 +114,7 @@ static void send_request(uint32_t target_ip) {
     uint8_t frame[60];
     memset(frame, 0, sizeof(frame));
     mac_t zero_mac = {{0, 0, 0, 0, 0, 0}};
-    uint32_t ip_n = htonl(target_ip);
-    build_arp_frame(frame, ARPOP_REQUEST, g_own_ip, &g_own_mac, ip_n, &zero_mac);
+    build_arp_frame(frame, ARPOP_REQUEST, g_own_ip, &g_own_mac, target_ip, &zero_mac);
 
     struct sockaddr_ll sll;
     memset(&sll, 0, sizeof(sll));
