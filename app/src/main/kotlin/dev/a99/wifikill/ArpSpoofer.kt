@@ -41,6 +41,9 @@ class ArpSpoofer(private val context: Context) {
     /** Number of currently tracked blocking sessions; drives the service UI. */
     val activeCount: StateFlow<Int> = _activeCount
 
+    /** IPs of victims currently tracked as blocked. */
+    fun blockedIpsSnapshot(): Set<String> = victims.keys.toSet()
+
     private var watchdogJob: Job? = null
 
     private fun syncActive() {

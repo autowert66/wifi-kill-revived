@@ -35,6 +35,23 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 _events.emit(Event.SpooferDied(ip))
             }
         }
+        // Keep UI kill-flags in sync with reality: any change to the
+        // tracked-victim count (Restore-all action, watchdog rescue, ...)
+        // re-derives isKilled from the spoofer's actual state, so paths
+        // that bypass the toggle cannot leave stale marks behind.
+        viewModelScope.launch {
+            spoofer.activeCount.collect {
+                val live = spoofer.blockedIpsSnapshot()
+                synchronized(hostsMutex) {
+                    killedIps.clear()
+                    killedIps.addAll(live)
+                    _hosts.value = _hosts.value.map { h ->
+                        val blocked = h.ip in live
+                        if (h.isKilled != blocked) h.copy(isKilled = blocked) else h
+                    }
+                }
+            }
+        }
         // Re-attach to blocking sessions a crashed previous instance left
         // behind (only possible when its pid was recycled), and surface them.
         viewModelScope.launch {
