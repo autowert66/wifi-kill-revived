@@ -14,7 +14,7 @@ android {
         applicationId = "dev.a99.wifikill"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
+        versionCode = 5
         versionName = "0.1.0"
     }
 

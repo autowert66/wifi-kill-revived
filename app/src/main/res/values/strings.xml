@@ -9,8 +9,14 @@
     <string name="kill_all_hint">Toggles ARP spoofing for every discovered device</string>
     <string name="root_required">Root access is required to scan and kill devices. Run on a rooted device with su available.</string>
     <string name="scan_failed">Scan failed: root unavailable or raw sockets blocked.</string>
-    <string name="kill_failed">Could not start ARP spoof (gateway MAC not found).</string>
+    <string name="kill_failed">Could not block this device (no root, or it is the gateway).</string>
     <string name="spoofer_died">A blocked client\u2019s blocker stopped unexpectedly; the client was restored.</string>
+
+    <string name="notif_channel_name">Active blocking</string>
+    <string name="notif_channel_desc">Shown while devices are blocked, with a control to restore everyone.</string>
+    <string name="notif_title">Blocking %1$d device(s)</string>
+    <string name="notif_text">Their traffic is being dropped. Tap to open WiFiKill.</string>
+    <string name="notif_action_restore_all">Restore all</string>
 
     <string name="about_title">About WiFiKill</string>
     <string name="about_version">Version %1$s</string>

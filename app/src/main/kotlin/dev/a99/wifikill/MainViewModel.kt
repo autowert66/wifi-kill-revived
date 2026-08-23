@@ -23,7 +23,8 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val scanner = NetworkScanner(app)
     private val resolver = HostnameResolver()
-    private val spoofer = ArpSpoofer(app)
+    private val appContext = app
+    private val spoofer get() = WifiKillApp.get(appContext).spoofer
 
     init {
         spoofer.startWatchdog(viewModelScope)
@@ -33,6 +34,29 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 updateHost(ip) { it.copy(isKilled = false) }
                 _events.emit(Event.SpooferDied(ip))
             }
+        }
+        // Re-attach to blocking sessions a crashed previous instance left
+        // behind (only possible when its pid was recycled), and surface them.
+        viewModelScope.launch {
+            val adopted = try {
+                spoofer.reconcile()
+            } catch (e: Exception) {
+                android.util.Log.e("WifiKill", "reconcile failed", e)
+                emptyList()
+            }
+            android.util.Log.d("WifiKill", "reconcile adopted=${adopted.size}: ${adopted.map { it.ip }}")
+            if (adopted.isEmpty()) return@launch
+            synchronized(hostsMutex) {
+                val snapshot = _hosts.value.toMutableList()
+                for (host in adopted) {
+                    killedIps.add(host.ip)
+                    val idx = snapshot.indexOfFirst { it.ip == host.ip }
+                    if (idx >= 0) snapshot[idx] = snapshot[idx].copy(isKilled = true)
+                    else snapshot.add(host)
+                }
+                _hosts.value = snapshot
+            }
+            KillService.start(appContext)
         }
     }
 
@@ -136,6 +160,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
             }
             updateHost(host.ip) { it.copy(isKilled = true) }
             killedIps.add(host.ip)
+            KillService.start(appContext)
         } else {
             spoofer.unkill(host)
             killedIps.remove(host.ip)
@@ -154,10 +179,14 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Called once root access is confirmed; cleans up orphans from a
-     *  previous crashed session. */
+    /**
+     * Called once root access is confirmed. Startup recovery relies solely
+     * on [ArpSpoofer.reconcile] (run unconditionally at init): surviving
+     * spoofers are adopted into the UI rather than killed, so an app crash
+     * no longer destroys an ongoing blocking session.
+     */
     fun onRootAvailable() {
-        viewModelScope.launch { spoofer.sweepOrphans() }
+        // Reserved for future startup work; reconciliation already ran.
     }
 
     fun shutdown() {

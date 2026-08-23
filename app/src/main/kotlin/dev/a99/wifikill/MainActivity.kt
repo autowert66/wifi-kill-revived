@@ -1,11 +1,14 @@
 package dev.a99.wifikill
 
+import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.os.Build
 import android.os.Bundle
 import android.view.View
 import android.view.animation.OvershootInterpolator
 import android.widget.FrameLayout
 import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -33,6 +36,9 @@ class MainActivity : AppCompatActivity() {
 
     private val viewModel: MainViewModel by viewModels()
 
+    private val notifPermission =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setupEdgeToEdge()
@@ -40,6 +46,13 @@ class MainActivity : AppCompatActivity() {
         setContentView(binding.root)
 
         applySystemBarInsets()
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
+            android.content.pm.PackageManager.PERMISSION_GRANTED
+        ) {
+            notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+        }
 
         lifecycleScope.launch {
             val rooted = withContext(Dispatchers.IO) {
