@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
                 OuiLookup.init(this@MainActivity)
                 RootExecutor.requireRoot()
             }
-            if (!rooted) showRootDialog()
+            if (!rooted) showRootDialog() else viewModel.onRootAvailable()
         }
 
         adapter = HostListAdapter { host, checked ->
@@ -100,6 +100,8 @@ class MainActivity : AppCompatActivity() {
                                 Toast.makeText(this@MainActivity, R.string.scan_failed, Toast.LENGTH_LONG).show()
                             is MainViewModel.Event.KillFailed ->
                                 Toast.makeText(this@MainActivity, R.string.kill_failed, Toast.LENGTH_LONG).show()
+                            is MainViewModel.Event.SpooferDied ->
+                                Toast.makeText(this@MainActivity, R.string.spoofer_died, Toast.LENGTH_LONG).show()
                         }
                     }
                 }

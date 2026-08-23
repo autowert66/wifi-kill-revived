@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.withContext
 import java.io.File
-import java.io.FileOutputStream
 import java.io.IOException
 import java.net.Inet4Address
 import java.net.NetworkInterface
@@ -114,29 +113,12 @@ class NetworkScanner(private val context: Context) {
                 } ?: "wlan0"
         }.getOrDefault("wlan0")
 
-    private suspend fun deployBinary(name: String): File = withContext(Dispatchers.IO) {
-        val dir = File(context.filesDir, "bin").apply { mkdirs() }
-        val dest = File(dir, name)
-        val assetHash = context.assets.open(name).use { it.readBytes().contentHashCode() }
-        if (!dest.exists() || dest.length() == 0L ||
-            runCatching { dest.readBytes().contentHashCode() }.getOrDefault(-1) != assetHash
-        ) {
-            context.assets.open(name).use { `in` ->
-                FileOutputStream(dest).use { out -> `in`.copyTo(out) }
-            }
-        }
-        if (!dest.canExecute()) {
-            RootExecutor.exec("chmod 755 \"${dest.absolutePath}\"")
-        }
-        dest
-    }
-
     fun scan(): Flow<Host> = channelFlow {
         // All of this is blocking I/O (binder calls, process spawning, pipe
         // reads); run it off the main thread so the UI stays responsive.
         withContext(Dispatchers.IO) {
             val info = getNetworkInfo()
-            val binary = deployBinary("arpscan")
+            val binary = BinaryDeployer.deploy(context, "arpscan")
             val cmd = "${binary.absolutePath} ${info.iface} ${info.gatewayIp} ${info.prefixLen}"
             val proc = RootExecutor.startPersistent(cmd)
             val reader = proc.childOutput()

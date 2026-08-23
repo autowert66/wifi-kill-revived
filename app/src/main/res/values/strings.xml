@@ -10,6 +10,7 @@
     <string name="root_required">Root access is required to scan and kill devices. Run on a rooted device with su available.</string>
     <string name="scan_failed">Scan failed: root unavailable or raw sockets blocked.</string>
     <string name="kill_failed">Could not start ARP spoof (gateway MAC not found).</string>
+    <string name="spoofer_died">A blocked client\u2019s blocker stopped unexpectedly; the client was restored.</string>
 
     <string name="about_title">About WiFiKill</string>
     <string name="about_version">Version %1$s</string>

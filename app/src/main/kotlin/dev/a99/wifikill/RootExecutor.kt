@@ -40,6 +40,39 @@ object RootExecutor {
         }
 
     /**
+     * Launch a command as root, fully detached from this app process.
+     *
+     * setsid gives the child its own session: once the su shell exits the
+     * child reparents to init, which makes it invisible to Android 12+'s
+     * phantom process killer (it only tracks app-descendant children) and
+     * immune to the SIGHUP that kills backgrounded su children when their
+     * session closes. Output is discarded except for one stderr line: the
+     * child pid echoed by the shell.
+     */
+    fun startDetached(cmd: String): Int = try {
+        val p = Runtime.getRuntime().exec(
+            arrayOf("su", "-c", "setsid $cmd </dev/null >/dev/null 2>&1 & echo \"\$!\" >&2")
+        )
+        val pid = p.errorStream.bufferedReader().readLine()?.trim()?.toIntOrNull() ?: -1
+        p.waitFor(2, TimeUnit.SECONDS)
+        pid
+    } catch (_: Exception) {
+        -1
+    }
+
+    /** Send SIGTERM to a (possibly detached) root process, off-thread. */
+    fun terminate(pid: Int) {
+        if (pid <= 0) return
+        Thread {
+            try {
+                Runtime.getRuntime().exec(arrayOf("su", "-c", "kill -TERM $pid"))
+                    .waitFor(2, TimeUnit.SECONDS)
+            } catch (_: Exception) {
+            }
+        }.apply { isDaemon = true }.start()
+    }
+
+    /**
      * Launch a command as root and keep its stdout readable.
      *
      * The command is started under `su` with `&` so we can capture its real pid
@@ -87,18 +120,11 @@ object RootExecutor {
 
         fun kill() {
             if (pid > 0) {
-                // Deliver SIGTERM off the calling thread; `su -c kill` is quick
-                // but spawning `su` must not block the UI thread. arpspoof's
-                // SIGTERM handler restores the victim's ARP cache, then exits;
-                // its `wait` in startPersistent returns and the su shell exits.
-                val target = pid
-                Thread {
-                    try {
-                        Runtime.getRuntime().exec(arrayOf("su", "-c", "kill -TERM $target"))
-                            .waitFor(2, TimeUnit.SECONDS)
-                    } catch (_: Exception) {
-                    }
-                }.apply { isDaemon = true }.start()
+                // Deliver SIGTERM off the calling thread; spawning `su` must
+                // not block the UI thread. arpspoof's SIGTERM handler
+                // restores the victim's ARP cache, then exits; its `wait` in
+                // startPersistent returns and the su shell exits.
+                terminate(pid)
             }
         }
     }

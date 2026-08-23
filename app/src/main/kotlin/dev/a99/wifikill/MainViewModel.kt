@@ -16,11 +16,25 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     sealed interface Event {
         object ScanFailed : Event
         object KillFailed : Event
+
+        /** A spoofer died unexpectedly; its victim has been restored. */
+        data class SpooferDied(val ip: String) : Event
     }
 
     private val scanner = NetworkScanner(app)
     private val resolver = HostnameResolver()
     private val spoofer = ArpSpoofer(app)
+
+    init {
+        spoofer.startWatchdog(viewModelScope)
+        viewModelScope.launch {
+            spoofer.deaths.collect { ip ->
+                synchronized(hostsMutex) { killedIps.remove(ip) }
+                updateHost(ip) { it.copy(isKilled = false) }
+                _events.emit(Event.SpooferDied(ip))
+            }
+        }
+    }
 
     private val _hosts = MutableStateFlow<List<Host>>(emptyList())
     val hosts: StateFlow<List<Host>> = _hosts
@@ -138,6 +152,12 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
                 _hosts.value = updated
             }
         }
+    }
+
+    /** Called once root access is confirmed; cleans up orphans from a
+     *  previous crashed session. */
+    fun onRootAvailable() {
+        viewModelScope.launch { spoofer.sweepOrphans() }
     }
 
     fun shutdown() {
