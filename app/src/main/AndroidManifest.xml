@@ -25,6 +25,10 @@
             </intent-filter>
         </activity>
 
+        <activity
+            android:name=".OnboardingActivity"
+            android:exported="false" />
+
         <service
             android:name=".KillService"
             android:exported="false"

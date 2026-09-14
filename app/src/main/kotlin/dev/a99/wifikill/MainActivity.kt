@@ -1,5 +1,6 @@
 package dev.a99.wifikill
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.os.Build
@@ -10,7 +11,6 @@ import android.widget.FrameLayout
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
@@ -42,24 +42,30 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setupEdgeToEdge()
+
+        // First launch (or first launch after an onboarding content update):
+        // the tour runs on top; it is only skipped once it was completed.
+        if (savedInstanceState == null && !OnboardingPrefs.isCompleted(this)) {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+        }
+
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         applySystemBarInsets()
 
+        // The notification prompt would land on top of the onboarding tour,
+        // so it is deferred until the tour is done.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+            OnboardingPrefs.isCompleted(this) &&
             checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
-            android.content.pm.PackageManager.PERMISSION_GRANTED
+            PackageManager.PERMISSION_GRANTED
         ) {
             notifPermission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
         }
 
         lifecycleScope.launch {
-            val rooted = withContext(Dispatchers.IO) {
-                OuiLookup.init(this@MainActivity)
-                RootExecutor.requireRoot()
-            }
-            if (!rooted) showRootDialog() else viewModel.onRootAvailable()
+            withContext(Dispatchers.IO) { OuiLookup.init(this@MainActivity) }
         }
 
         adapter = HostListAdapter { host, checked ->
@@ -85,6 +91,10 @@ class MainActivity : AppCompatActivity() {
 
         binding.aboutVersionText.text =
             getString(R.string.about_version, BuildConfig.VERSION_NAME)
+
+        binding.replayIntro.setOnClickListener {
+            startActivity(Intent(this, OnboardingActivity::class.java))
+        }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -185,13 +195,6 @@ class MainActivity : AppCompatActivity() {
                 .withEndAction { binding.scanFab.visibility = View.INVISIBLE }
                 .start()
         }
-    }
-
-    private fun showRootDialog() {
-        AlertDialog.Builder(this)
-            .setMessage(R.string.root_required)
-            .setPositiveButton(android.R.string.ok, null)
-            .show()
     }
 
     override fun onDestroy() {

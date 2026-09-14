@@ -14,8 +14,8 @@ android {
         applicationId = "dev.a99.wifikill"
         minSdk = 26
         targetSdk = 34
-        versionCode = 6
-        versionName = "0.2.0"
+        versionCode = 7
+        versionName = "0.3.0"
     }
 
     signingConfigs {
@@ -77,6 +77,7 @@ android {
 dependencies {
     implementation("androidx.activity:activity-ktx:1.9.3")
     implementation("androidx.appcompat:appcompat:1.7.0")
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.7.0")
