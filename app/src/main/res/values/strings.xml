@@ -33,28 +33,28 @@
     <string name="ob_page_a11y">Page %1$d of %2$d</string>
 
     <string name="ob_welcome_title">Welcome to WiFiKill</string>
-    <string name="ob_welcome_body">The classic network tool, revived for modern rooted Android. WiFiKill shows you who is sharing your Wi-Fi — and lets you decide whether they stay. Here\u2019s the 30-second tour.</string>
+    <string name="ob_welcome_body">The classic network tool, revived for modern rooted Android. WiFiKill shows you who is sharing your Wi-Fi and lets you decide whether they stay. Here\u2019s the 30-second tour.</string>
 
     <string name="ob_scan_title">See your network</string>
-    <string name="ob_scan_body">Tap scan and WiFiKill sweeps the subnet, listing every device that\u2019s online right now — phones, laptops, TVs, smart-home gadgets — each with its IP, vendor and hostname.</string>
+    <string name="ob_scan_body">Tap scan and WiFiKill sweeps the subnet, listing every device online right now: phones, laptops, TVs, and smart-home gadgets, each with its IP, vendor, and hostname.</string>
 
     <string name="ob_block_title">Block any client</string>
-    <string name="ob_block_body">Flip a device\u2019s switch to cut it off: WiFiKill overrides its view of the network so the router stops talking to it, and its internet access just stops. Flip it back and the device is restored instantly.</string>
+    <string name="ob_block_body">Flip a device\u2019s switch to cut it off. WiFiKill overrides its view of the network so the router stops talking to it, and its internet access just stops.\n\nFlip the switch back and the device is restored instantly.</string>
 
     <string name="ob_bandwidth_title">More bandwidth for you</string>
-    <string name="ob_bandwidth_body">Blocked clients stop streaming, syncing and downloading — the bandwidth they were eating goes straight back to you. Handy when someone is hogging the network mid-game or mid-call.</string>
+    <string name="ob_bandwidth_body">Blocked clients stop streaming, syncing, and downloading, and the bandwidth they were eating goes straight back to you. Handy when someone is hogging the network mid-game or mid-call.</string>
 
     <string name="ob_fair_title">Play fair</string>
-    <string name="ob_fair_body">WiFiKill is a testing and educational tool, not a toy. Use it only on networks you own or have explicit permission to test — blocking other people\u2019s devices without consent is disruptive, and may be unlawful.</string>
+    <string name="ob_fair_body">WiFiKill is a testing and educational tool, not a toy. Use it only on networks you own or have explicit permission to test.\n\nBlocking other people\u2019s devices without consent is disruptive and may be unlawful.</string>
     <string name="ob_fair_confirm">I\u2019ll only use WiFiKill on networks I own or am authorised to test</string>
 
     <string name="ob_root_title">Root required</string>
-    <string name="ob_root_body">Powerful tools need deep system access. WiFiKill uses superuser (root) permissions to craft the raw network packets that scanning and blocking rely on — ordinary apps simply can\u2019t do this.</string>
+    <string name="ob_root_body">Powerful tools need deep system access. WiFiKill uses superuser (root) permissions to craft the raw network packets that scanning and blocking rely on. Ordinary apps simply can\u2019t do this.</string>
     <string name="ob_root_checking">Checking for root…</string>
     <string name="ob_root_granted_title">Root access granted</string>
     <string name="ob_root_granted_body">You\u2019re all set. WiFiKill can discover and block devices on your network.</string>
     <string name="ob_root_missing_title">No root detected</string>
-    <string name="ob_root_missing_body">WiFiKill only works on rooted devices. If your device is rooted, open your root manager (KernelSU, Magisk, …), grant WiFiKill superuser access, then retry. KernelSU hides itself from apps that aren\u2019t granted yet — so \u201Cnot granted\u201D can look exactly like \u201Cnot rooted\u201D.</string>
+    <string name="ob_root_missing_body">WiFiKill only works on rooted devices. If your device is rooted, open your root manager (KernelSU, Magisk, and similar), grant WiFiKill superuser access, then retry.\n\nKernelSU hides itself from apps that haven\u2019t been granted yet, so \u201Cnot granted\u201D can look exactly like \u201Cnot rooted\u201D.</string>
     <string name="ob_root_retry">Retry</string>
     <string name="ob_root_learn_more">What is rooting?</string>
     <string name="ob_root_learn_more_url" translatable="false">https://en.wikipedia.org/wiki/Rooting_(Android)</string>
