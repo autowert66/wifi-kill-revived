@@ -13,12 +13,12 @@
         android:layout_height="match_parent"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp">
+        android:paddingHorizontal="24dp"
+        android:paddingBottom="24dp">
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="0.9"/>
+            android:layout_height="140dp"/>
 
         <FrameLayout
             android:layout_width="192dp"
@@ -63,11 +63,16 @@
             android:textAppearance="?attr/textAppearanceBodyLarge"
             android:textColor="?attr/colorOnSurfaceVariant"/>
 
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/rootStatusCard"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="24dp"
             app:cardCornerRadius="20dp"
             app:cardElevation="0dp">
 
@@ -159,10 +164,5 @@
             android:layout_marginTop="12dp"
             android:text="@string/ob_root_explore_anyway"
             android:visibility="gone"/>
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1.1"/>
     </LinearLayout>
 </ScrollView>

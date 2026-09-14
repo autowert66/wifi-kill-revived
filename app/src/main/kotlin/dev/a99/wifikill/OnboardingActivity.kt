@@ -32,7 +32,7 @@ import kotlinx.coroutines.withContext
  */
 class OnboardingActivity : AppCompatActivity() {
 
-    private enum class RootStatus { CHECKING, GRANTED, MISSING }
+    private enum class RootStatus { UNCHECKED, CHECKING, GRANTED, MISSING }
 
     private companion object {
         const val CONFIRM_POSITION = 4
@@ -48,7 +48,7 @@ class OnboardingActivity : AppCompatActivity() {
     private lateinit var adapter: OnboardingPageAdapter
 
     private var accepted = false
-    private var rootState = RootStatus.CHECKING
+    private var rootState = RootStatus.UNCHECKED
     private var rootPage: PageOnboardingRootBinding? = null
 
     private val pages = listOf(
@@ -115,9 +115,21 @@ class OnboardingActivity : AppCompatActivity() {
             pager.offscreenPageLimit = pages.size - 1
             pager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
                 override fun onPageSelected(position: Int) {
+                    if (!accepted && position > CONFIRM_POSITION) {
+                        pager.setCurrentItem(CONFIRM_POSITION, false)
+                        return
+                    }
                     dots.setSelection(position)
                     backButton.isInvisible = position == 0
                     syncGating()
+                }
+
+                override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                    // On the fair-use page, block a forward swipe until the
+                    // checkbox is ticked, but keep the backward swipe free.
+                    if (!accepted && position == CONFIRM_POSITION && positionOffset > 0f) {
+                        pager.setCurrentItem(CONFIRM_POSITION, false)
+                    }
                 }
             })
 
@@ -162,8 +174,8 @@ class OnboardingActivity : AppCompatActivity() {
 
     /**
      * Gates that keep the tour honest: the fair-use checkbox must be ticked
-     * before the disclaimer page can be left (in either direction), and the
-     * final continue button stays disabled until root is confirmed.
+     * before the disclaimer page can be left forwards, and the final continue
+     * button stays disabled until root is confirmed.
      */
     private fun syncGating() {
         val position = binding.pager.currentItem
@@ -177,7 +189,6 @@ class OnboardingActivity : AppCompatActivity() {
         }
         binding.nextFab.isEnabled = position != CONFIRM_POSITION || accepted
         binding.startButton.isEnabled = rootState == RootStatus.GRANTED
-        binding.pager.isUserInputEnabled = !(position == CONFIRM_POSITION && !accepted)
     }
 
     private fun checkRoot() {
@@ -196,7 +207,7 @@ class OnboardingActivity : AppCompatActivity() {
     private fun applyRootState() {
         val page = rootPage ?: return
         when (rootState) {
-            RootStatus.CHECKING -> {
+            RootStatus.UNCHECKED, RootStatus.CHECKING -> {
                 page.rootStatusCard.setCardBackgroundColor(colorAttr(MAttr.colorSurfaceContainerHighest))
                 page.rootStatusProgress.isVisible = true
                 page.rootStatusIcon.isVisible = false

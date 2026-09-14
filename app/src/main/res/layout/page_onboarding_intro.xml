@@ -13,12 +13,12 @@
         android:layout_height="match_parent"
         android:gravity="center_horizontal"
         android:orientation="vertical"
-        android:paddingHorizontal="24dp">
+        android:paddingHorizontal="24dp"
+        android:paddingBottom="24dp">
 
         <Space
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="0.9"/>
+            android:layout_height="140dp"/>
 
         <FrameLayout
             android:layout_width="192dp"
@@ -66,6 +66,6 @@
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1.1"/>
+            android:layout_weight="1"/>
     </LinearLayout>
 </ScrollView>
