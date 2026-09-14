@@ -5,6 +5,7 @@ import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
@@ -50,6 +51,8 @@ class OnboardingActivity : AppCompatActivity() {
     private var accepted = false
     private var rootState = RootStatus.UNCHECKED
     private var rootPage: PageOnboardingRootBinding? = null
+
+    private val rootTopSpacerHeightPx by lazy { (140 * resources.displayMetrics.density).toInt() }
 
     private val pages = listOf(
         OnboardingPage.Intro(
@@ -249,7 +252,37 @@ class OnboardingActivity : AppCompatActivity() {
                 page.exploreAnyway.isVisible = true
             }
         }
+        fitRootContent()
         syncGating()
+    }
+
+    /**
+     * The root page shares the uniform hero offset with the other pages, but
+     * its "no root" card can outgrow the screen. When that content would
+     * otherwise force a scroll, shrink the top spacer (dropping the icon from
+     * its uniform position) so everything stays on screen. When it fits, the
+     * uniform offset is preserved untouched.
+     */
+    private fun fitRootContent() {
+        val page = rootPage ?: return
+        val scroll = page.root
+        if (scroll.height <= 0) {
+            scroll.post { fitRootContent() }
+            return
+        }
+        val content = page.rootContent
+        val spacer = page.topSpacer
+        val lp = spacer.layoutParams
+        lp.height = 0
+        spacer.layoutParams = lp
+        content.measure(
+            View.MeasureSpec.makeMeasureSpec(scroll.width, View.MeasureSpec.EXACTLY),
+            View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+        )
+        val spare = scroll.height - content.measuredHeight
+        lp.height = spare.coerceIn(0, rootTopSpacerHeightPx)
+        spacer.layoutParams = lp
+        content.requestLayout()
     }
 
     private fun colorAttr(attr: Int): Int = MaterialColors.getColor(binding.root, attr)
