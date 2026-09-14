@@ -1,91 +1,130 @@
-# WiFiKill MVP
+# WiFiKill
 
-Deauth a device from your own Wi-Fi network via ARP spoofing, then restore it.
+WiFiKill is a rooted Android utility for inspecting devices on the local IPv4
+Wi-Fi network and temporarily interrupting a selected device's connection with
+ARP spoofing. Turning the switch off sends corrective ARP announcements and
+ends the spoofing session.
 
-```
-wifi-kill-revived/
-├── app/                 Android app (Kotlin)
-│   └── src/main/
-│       ├── kotlin/dev/a99/wifikill/
-│       │   ├── MainActivity.kt        UI + lifecycle
-│       │   ├── MainViewModel.kt       scan / kill / hostname state
-│       │   ├── RootExecutor.kt        su-based process launcher
-│       │   ├── NetworkScanner.kt      arpscan deploy + output parsing
-│       │   ├── HostnameResolver.kt    reverse-DNS / mDNS / NBNS racers
-│       │   ├── OuiLookup.kt           MAC prefix -> manufacturer
-│       │   ├── ArpSpoofer.kt          arpspoof lifecycle (kill/unkill)
-│       │   ├── model/Host.kt
-│       │   └── ui/HostListAdapter.kt
-│       └── assets/                    arpscan, arpspoof, oui.json
-├── native/              C sources + cross-compile script
-├── tools/gen_oui.py     regenerates assets/oui.json from wireshark.org
-└── bin/                 host-built ARM64 binaries (build artifacts)
-```
+The app is intended for network troubleshooting, lab work, and authorized
+testing. It does not perform Wi-Fi deauthentication, and it does not affect
+IPv6 traffic.
+
+[![Build](https://github.com/autowert66/wifi-kill-revived/actions/workflows/build.yml/badge.svg)](https://github.com/autowert66/wifi-kill-revived/actions/workflows/build.yml)
 
 ## Requirements
 
-- Android device (ARM64) **rooted** with working `su` (`adb shell su -c id`)
-- Android NDK (e.g. `ndk;27.2.12479018`), JDK 21, Gradle wrapper (8.9)
-- Wi-Fi must be in station/client mode; the phone's chipset must pass raw frame
-  injection (many don't — test early).
+- A rooted ARM64 Android device with a working `su` binary
+- Android 8.0 or newer, because the app's minimum SDK is 26
+- A Wi-Fi chipset and ROM that permit the required raw packet operations
+- Android SDK, Android NDK, JDK 21, and Python 3 for building from source
 
-## Build
+Check root access before installing:
 
 ```bash
-# 1. Native binaries
-./native/build.sh                # requires NDK under ~/Library/Android/sdk/ndk
+adb shell su -c id
+```
 
-# 2. OUI database (once, or whenever you want fresh vendors)
-python3 tools/gen_oui.py         # writes app/src/main/assets/oui.json
+The command should return a root user ID. Root access alone does not guarantee
+that the device's Wi-Fi driver will pass crafted packets.
 
-# 3. Copy binaries into the app (build.sh outputs to bin/)
+## Build From Source
+
+The native tools are compiled for Android ARM64 and bundled into the APK as
+assets.
+
+```bash
+# Build arpscan and arpspoof. Pass an NDK path if it is not auto-detected.
+./native/build.sh [/path/to/android-ndk]
+
+# Refresh the MAC-address vendor database when needed.
+python3 tools/gen_oui.py
+
+# Copy the native build outputs into the app assets.
 cp bin/arpscan bin/arpspoof app/src/main/assets/
 
-# 4. APK + tests + lint
-export JAVA_HOME=/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home
+# Build, test, and lint the debug variant.
 ./gradlew :app:assembleDebug :app:testDebugUnitTest :app:lintDebug
+```
 
-# 5. Install
+The APK is written to
+`app/build/outputs/apk/debug/app-debug.apk`. Install it with:
+
+```bash
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## Manual on-device verification (before using the UI)
+`native/build.sh` looks for the NDK in its argument, `ANDROID_NDK_HOME`,
+`ANDROID_SDK_ROOT`, `ANDROID_HOME`, and common Android SDK locations.
+
+## Use The App
+
+1. Connect the phone to the Wi-Fi network you are authorized to test.
+2. Open WiFiKill and grant root access when prompted.
+3. Scan the local network. Hosts are listed with their IP address, MAC address,
+   hostname when available, and hardware vendor.
+4. Toggle a host to start or stop its ARP spoofing session.
+5. Use the foreground-service notification to restore all active sessions if
+   the app is no longer visible.
+
+The gateway cannot be selected as a target. Restoring a host depends on the
+spoofing process receiving its cleanup signal; the app also monitors active
+sessions and restores targets when a blocker exits unexpectedly.
+
+## Verify Native Tools
+
+You can test the compiled tools before using the UI. Replace the interface,
+network, and target values with values from your own network.
 
 ```bash
 adb push bin/arpscan /data/local/tmp/arpscan
 adb shell su -c "chmod 755 /data/local/tmp/arpscan"
 adb shell su -c "/data/local/tmp/arpscan wlan0 192.168.1.1 24"
-# expect "IP MAC" lines for responding hosts
 
 adb push bin/arpspoof /data/local/tmp/arpspoof
 adb shell su -c "chmod 755 /data/local/tmp/arpspoof"
-adb shell su -c "/data/local/tmp/arpspoof wlan0 <victim> <victim_mac> <gateway_ip> <gateway_mac> &"
-# victim loses internet; `killall arpspoof` (SIGTERM) restores it
 ```
 
-## App flow
+The scanner prints responding hosts as `IP MAC` pairs. Do not start a spoofing
+session against a device or network without explicit authorization.
 
-1. FAB triggers an ARP scan of the current SSID's subnet.
-2. Each host gets OUI manufacturer + a hostname (
-   reverse DNS / mDNS / NetBIOS racers) once found.
-3. Flipping a switch spawns `arpspoof` claiming the gateway's IP, refreshes
-   every 1s, and restores the correct mapping on SIGTERM.
-4. `unkillAll()` on `onDestroy`/`onCleared` cleans up all targets.
+## Project Layout
 
-## Known failure modes
+```text
+app/                 Android application written in Kotlin
+app/src/main/assets/ Native binaries and the OUI vendor database
+native/              C sources and the Android NDK build script
+tools/gen_oui.py     Generates the bundled OUI database
+bin/                 Locally built ARM64 native binaries
+```
 
-| Situation | Handling |
-|---|---|
-| No root | Dialogs on launch, switches no-op |
-| Gateway MAC missing from `/proc/net/arp` | Kill toggle shows a toast; re-scan to refresh ARP table |
-| SELinux blocks raw sockets | Some ROMs need `setenforce 0`; error surfaces as scan failure |
-| Chipset drops crafted frames | Nothing to fix; test on real hardware early |
-| Target re-ARPs (some OSes) | 1s resend interval beats most |
-| IPv6 targets | Unaffected (ARP is IPv4-only; NDP is out of scope) |
+The GitHub Actions workflow builds the native tools, debug and release APKs,
+runs unit tests, and uploads the debug APK as an artifact. Tagged commits also
+create a GitHub release with both APK variants.
 
-**Only use on networks and devices you own.**
+## Troubleshooting
+
+| Symptom | Likely cause |
+| --- | --- |
+| Scan fails immediately | Root is unavailable, or raw sockets are blocked by the ROM or SELinux policy. |
+| No hosts appear | The phone is not on Wi-Fi, the interface name is unusual, or the network blocks ARP responses. |
+| A target reconnects | Some clients refresh their ARP cache faster than the spoofing interval. |
+| IPv6 traffic continues | ARP only covers IPv4. IPv6 neighbor discovery is not implemented. |
+| The app cannot block a device | The Wi-Fi chipset or driver does not transmit the required crafted frames. |
 
 ## Tests
 
-Unit tests cover the DNS/NBNS wire-format parsing (`HostnameResolverTest`).
-Run with `./gradlew :app:testDebugUnitTest`.
+Run the unit tests with:
+
+```bash
+./gradlew :app:testDebugUnitTest
+```
+
+The tests include hostname-resolution wire-format parsing and OUI lookup
+behavior.
+
+## Safety
+
+Use WiFiKill only on networks and devices you own or have explicit permission
+to test. Interrupting another person's network access without authorization may
+be unlawful. The authors are not responsible for misuse or for connectivity
+that is not restored after a device, ROM, or driver failure.
