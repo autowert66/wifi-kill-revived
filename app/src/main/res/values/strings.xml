@@ -18,8 +18,7 @@
     <string name="notif_action_restore_all">Restore all</string>
 
     <string name="about_title">About WiFiKill</string>
-    <string name="about_version">Version %1$s</string>
-    <string name="about_body">WiFiKill revives the classic WiFiKill utility for modern Android. It lets you discover every device connected to your local network, identify them by MAC address and vendor, and selectively cut off their connection — all from your phone.</string>
+    <string name="about_body">Discover every device on your network and selectively cut off its connection.</string>
     <string name="about_disclaimer">This tool requires root access and should only be used on networks you own or are authorised to test. Blocking other people\u2019s devices without permission is disruptive and may be unlawful.</string>
     <string name="about_license">Licensed under the GPLv3. Use responsibly.</string>
 
@@ -61,6 +60,12 @@
     <string name="ob_root_explore_anyway">Explore anyway</string>
 
     <!-- Settings -->
+    <string name="settings_section_help">Help</string>
+    <string name="settings_section_about">About</string>
+    <string name="settings_how_it_works_summary">How scanning and blocking work</string>
     <string name="settings_replay_title">Show introduction again</string>
     <string name="settings_replay_summary">Replays the welcome tour and the root check.</string>
+    <string name="settings_license_title">License</string>
+    <string name="settings_license_value">GPLv3</string>
+    <string name="settings_disclaimer_title">Legal disclaimer</string>
 </resources>

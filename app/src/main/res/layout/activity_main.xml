@@ -130,11 +130,20 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:paddingHorizontal="16dp"
+                    android:paddingTop="8dp"
+                    android:paddingBottom="32dp">
+
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/settings_section_help"
+                        android:textAppearance="@style/TextAppearance.WifiKill.SectionHeader"/>
 
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
                         app:cardBackgroundColor="?attr/colorSurfaceContainer"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="0dp">
@@ -142,55 +151,45 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp">
+                            android:orientation="vertical">
 
-                            <com.google.android.material.textview.MaterialTextView
+                            <dev.a99.wifikill.ui.SettingsRowView
+                                android:id="@+id/howItWorksRow"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="@string/about_title"
-                                android:textAppearance="?attr/textAppearanceTitleLarge"
-                                android:textColor="?attr/colorOnSurface"/>
+                                app:rowBody="@string/how_it_works_body"
+                                app:rowIcon="@drawable/ic_ob_radar"
+                                app:rowSummary="@string/settings_how_it_works_summary"
+                                app:rowTitle="@string/how_it_works_title"/>
 
-                            <com.google.android.material.textview.MaterialTextView
-                                android:id="@+id/aboutVersionText"
+                            <com.google.android.material.divider.MaterialDivider
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="4dp"
-                                android:text="@string/about_version"
-                                android:textAppearance="?attr/textAppearanceBodyMedium"
-                                android:textColor="?attr/colorOnSurfaceVariant"/>
+                                app:dividerInsetEnd="16dp"
+                                app:dividerInsetStart="16dp"/>
 
-                            <com.google.android.material.textview.MaterialTextView
+                            <dev.a99.wifikill.ui.SettingsRowView
+                                android:id="@+id/replayIntro"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="16dp"
-                                android:text="@string/about_body"
-                                android:textAppearance="?attr/textAppearanceBodyMedium"
-                                android:textColor="?attr/colorOnSurface"/>
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="16dp"
-                                android:text="@string/about_disclaimer"
-                                android:textAppearance="?attr/textAppearanceBodySmall"
-                                android:textColor="?attr/colorOnSurfaceVariant"/>
-
-                            <com.google.android.material.textview.MaterialTextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="@string/about_license"
-                                android:textAppearance="?attr/textAppearanceBodySmall"
-                                android:textColor="?attr/colorOnSurfaceVariant"/>
+                                app:rowChevron="true"
+                                app:rowIcon="@drawable/ic_ob_replay"
+                                app:rowSummary="@string/settings_replay_summary"
+                                app:rowTitle="@string/settings_replay_title"/>
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
 
+                    <com.google.android.material.textview.MaterialTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="24dp"
+                        android:text="@string/settings_section_about"
+                        android:textAppearance="@style/TextAppearance.WifiKill.SectionHeader"/>
+
                     <com.google.android.material.card.MaterialCardView
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
+                        android:layout_marginTop="8dp"
                         app:cardBackgroundColor="?attr/colorSurfaceContainer"
                         app:cardCornerRadius="16dp"
                         app:cardElevation="0dp">
@@ -198,72 +197,43 @@
                         <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:orientation="vertical"
-                            android:padding="16dp">
+                            android:orientation="vertical">
 
-                            <com.google.android.material.textview.MaterialTextView
+                            <dev.a99.wifikill.ui.SettingsRowView
+                                android:id="@+id/aboutRow"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:text="@string/how_it_works_title"
-                                android:textAppearance="?attr/textAppearanceTitleMedium"
-                                android:textColor="?attr/colorOnSurface"/>
+                                app:rowIcon="@drawable/ic_ob_info"
+                                app:rowSummary="@string/about_body"
+                                app:rowTitle="@string/about_title"/>
 
-                            <com.google.android.material.textview.MaterialTextView
+                            <com.google.android.material.divider.MaterialDivider
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginTop="8dp"
-                                android:text="@string/how_it_works_body"
-                                android:textAppearance="?attr/textAppearanceBodyMedium"
-                                android:textColor="?attr/colorOnSurfaceVariant"/>
-                        </LinearLayout>
-                    </com.google.android.material.card.MaterialCardView>
+                                app:dividerInsetEnd="16dp"
+                                app:dividerInsetStart="16dp"/>
 
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/replayIntro"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="16dp"
-                        android:clickable="true"
-                        android:focusable="true"
-                        app:cardBackgroundColor="?attr/colorSurfaceContainer"
-                        app:cardCornerRadius="16dp"
-                        app:cardElevation="0dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:gravity="center_vertical"
-                            android:orientation="horizontal"
-                            android:padding="16dp">
-
-                            <ImageView
-                                android:layout_width="24dp"
-                                android:layout_height="24dp"
-                                android:importantForAccessibility="no"
-                                android:src="@drawable/ic_ob_replay"
-                                android:tint="?attr/colorPrimary"/>
-
-                            <LinearLayout
-                                android:layout_width="0dp"
+                            <dev.a99.wifikill.ui.SettingsRowView
+                                android:id="@+id/licenseRow"
+                                android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                android:layout_marginStart="16dp"
-                                android:layout_weight="1"
-                                android:orientation="vertical">
+                                app:rowIcon="@drawable/ic_ob_key"
+                                app:rowTitle="@string/settings_license_title"
+                                app:rowValue="@string/settings_license_value"/>
 
-                                <com.google.android.material.textview.MaterialTextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/settings_replay_title"
-                                    android:textAppearance="?attr/textAppearanceTitleSmall"
-                                    android:textColor="?attr/colorOnSurface"/>
+                            <com.google.android.material.divider.MaterialDivider
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:dividerInsetEnd="16dp"
+                                app:dividerInsetStart="16dp"/>
 
-                                <com.google.android.material.textview.MaterialTextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:text="@string/settings_replay_summary"
-                                    android:textAppearance="?attr/textAppearanceBodySmall"
-                                    android:textColor="?attr/colorOnSurfaceVariant"/>
-                            </LinearLayout>
+                            <dev.a99.wifikill.ui.SettingsRowView
+                                android:id="@+id/disclaimerRow"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:rowChevron="true"
+                                app:rowIcon="@drawable/ic_ob_warning"
+                                app:rowTitle="@string/settings_disclaimer_title"/>
                         </LinearLayout>
                     </com.google.android.material.card.MaterialCardView>
                 </LinearLayout>

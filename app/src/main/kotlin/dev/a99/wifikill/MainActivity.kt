@@ -20,6 +20,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.transition.TransitionManager
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
 import dev.a99.wifikill.databinding.ActivityMainBinding
 import dev.a99.wifikill.ui.HostListAdapter
@@ -89,12 +90,13 @@ class MainActivity : AppCompatActivity() {
             true
         }
 
-        binding.aboutVersionText.text =
-            getString(R.string.about_version, BuildConfig.VERSION_NAME)
+        binding.aboutRow.setValueText(BuildConfig.VERSION_NAME)
 
-        binding.replayIntro.setOnClickListener {
+        binding.replayIntro.setOnRowClickListener {
             startActivity(Intent(this, OnboardingActivity::class.java))
         }
+
+        binding.disclaimerRow.setOnRowClickListener { showDisclaimerDialog() }
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -130,6 +132,16 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
+    }
+
+    private fun showDisclaimerDialog() {
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.settings_disclaimer_title)
+            .setMessage(
+                getString(R.string.about_disclaimer) + "\n\n" + getString(R.string.about_license),
+            )
+            .setPositiveButton(android.R.string.ok, null)
+            .show()
     }
 
     private fun setupEdgeToEdge() {
