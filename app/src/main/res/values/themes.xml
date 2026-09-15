@@ -8,4 +8,16 @@
     <style name="TextAppearance.WifiKill.SectionHeader" parent="TextAppearance.Material3.LabelLarge">
         <item name="android:textColor">?attr/colorPrimary</item>
     </style>
+
+    <style name="TextAppearance.WifiKill.StepTitle" parent="TextAppearance.Material3.TitleSmall">
+        <item name="android:textColor">?attr/colorOnSurface</item>
+    </style>
+
+    <style name="TextAppearance.WifiKill.StepBody" parent="TextAppearance.Material3.BodyMedium">
+        <item name="android:textColor">?attr/colorOnSurfaceVariant</item>
+    </style>
+
+    <style name="TextAppearance.WifiKill.StepBadge" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:textColor">?attr/colorOnPrimaryContainer</item>
+    </style>
 </resources>

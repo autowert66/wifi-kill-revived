@@ -82,4 +82,13 @@
         android:visibility="gone"
         tools:text="Expanded body text"
         tools:visibility="visible" />
+
+    <LinearLayout
+        android:id="@+id/settingsRowBodyContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingBottom="16dp"
+        android:visibility="gone" />
 </merge>

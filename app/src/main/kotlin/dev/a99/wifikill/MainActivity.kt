@@ -24,6 +24,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.transition.MaterialSharedAxis
 import dev.a99.wifikill.databinding.ActivityMainBinding
 import dev.a99.wifikill.ui.HostListAdapter
+import dev.a99.wifikill.ui.SequenceStepsView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -97,6 +98,27 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.disclaimerRow.setOnRowClickListener { showDisclaimerDialog() }
+
+        binding.howItWorksRow.setBodyView(
+            SequenceStepsView(this).apply {
+                setSteps(
+                    listOf(
+                        SequenceStepsView.Step(
+                            getString(R.string.how_it_works_step_scan_title),
+                            getString(R.string.how_it_works_step_scan_body),
+                        ),
+                        SequenceStepsView.Step(
+                            getString(R.string.how_it_works_step_block_title),
+                            getString(R.string.how_it_works_step_block_body),
+                        ),
+                        SequenceStepsView.Step(
+                            getString(R.string.how_it_works_step_restore_title),
+                            getString(R.string.how_it_works_step_restore_body),
+                        ),
+                    ),
+                )
+            },
+        )
 
         lifecycleScope.launch {
             repeatOnLifecycle(Lifecycle.State.STARTED) {

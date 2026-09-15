@@ -23,7 +23,12 @@
     <string name="about_license">Licensed under the GPLv3. Use responsibly.</string>
 
     <string name="how_it_works_title">How it works</string>
-    <string name="how_it_works_body">Tapping the scan button sweeps the local subnet using ARP requests and reports back each device\u2019s IP, MAC address, hostname and manufacturer. When you toggle a device\u2019s kill switch, WiFiKill launches an ARP spoofing session that constantly re-announces your phone as the network gateway, so the target\u2019s traffic gets routed into a black hole instead of reaching the router. Flipping the switch off stops the spoof and restores the device\u2019s normal connectivity.</string>
+    <string name="how_it_works_step_scan_title">Scan the network</string>
+    <string name="how_it_works_step_scan_body">Tapping scan sweeps the local subnet with ARP requests, then reports each device\u2019s IP, MAC address, hostname and manufacturer.</string>
+    <string name="how_it_works_step_block_title">Block a device</string>
+    <string name="how_it_works_step_block_body">Flip a device\u2019s kill switch and WiFiKill launches an ARP spoofing session, constantly re-announcing your phone as the gateway so the target\u2019s traffic is routed into a black hole.</string>
+    <string name="how_it_works_step_restore_title">Restore it</string>
+    <string name="how_it_works_step_restore_body">Flip the switch off to stop the spoof and return the device to normal connectivity.</string>
 
     <!-- Onboarding -->
     <string name="ob_next">Next</string>

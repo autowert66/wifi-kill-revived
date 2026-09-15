@@ -28,8 +28,11 @@ class SettingsRowView @JvmOverloads constructor(
     private val summaryView: MaterialTextView
     private val valueView: MaterialTextView
     private val bodyView: MaterialTextView
+    private val bodyContainer: LinearLayout
 
     private var expandable = false
+    private var hasTextBody = false
+    private var hasCustomBody = false
 
     var isExpanded = false
         private set
@@ -45,6 +48,7 @@ class SettingsRowView @JvmOverloads constructor(
         summaryView = findViewById(R.id.settingsRowSummary)
         valueView = findViewById(R.id.settingsRowValue)
         bodyView = findViewById(R.id.settingsRowBody)
+        bodyContainer = findViewById(R.id.settingsRowBodyContainer)
 
         val a = context.obtainStyledAttributes(attrs, R.styleable.SettingsRowView)
         try {
@@ -65,10 +69,9 @@ class SettingsRowView @JvmOverloads constructor(
 
             val body = a.getString(R.styleable.SettingsRowView_rowBody)
             if (!body.isNullOrEmpty()) {
-                expandable = true
+                hasTextBody = true
                 bodyView.text = body
-                chevronView.visibility = View.VISIBLE
-                header.setOnClickListener { toggle() }
+                markExpandable()
             } else if (a.getBoolean(R.styleable.SettingsRowView_rowChevron, false)) {
                 chevronView.setImageResource(R.drawable.ic_ob_arrow_forward)
                 chevronView.visibility = View.VISIBLE
@@ -76,6 +79,20 @@ class SettingsRowView @JvmOverloads constructor(
         } finally {
             a.recycle()
         }
+    }
+
+    private fun markExpandable() {
+        expandable = true
+        chevronView.visibility = View.VISIBLE
+        header.setOnClickListener { toggle() }
+    }
+
+    /** Replaces the expandable body with an arbitrary view. */
+    fun setBodyView(view: View) {
+        bodyContainer.removeAllViews()
+        bodyContainer.addView(view)
+        hasCustomBody = true
+        markExpandable()
     }
 
     fun setValueText(text: CharSequence) {
@@ -95,7 +112,8 @@ class SettingsRowView @JvmOverloads constructor(
         if (!expandable || expanded == isExpanded) return
         isExpanded = expanded
         TransitionManager.beginDelayedTransition(this)
-        bodyView.visibility = if (expanded) View.VISIBLE else View.GONE
+        bodyView.visibility = if (expanded && hasTextBody) View.VISIBLE else View.GONE
+        bodyContainer.visibility = if (expanded && hasCustomBody) View.VISIBLE else View.GONE
         chevronView.animate()
             .rotation(if (expanded) 180f else 0f)
             .setDuration(200)

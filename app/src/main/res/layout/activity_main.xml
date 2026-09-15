@@ -157,7 +157,6 @@
                                 android:id="@+id/howItWorksRow"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"
-                                app:rowBody="@string/how_it_works_body"
                                 app:rowIcon="@drawable/ic_ob_radar"
                                 app:rowSummary="@string/settings_how_it_works_summary"
                                 app:rowTitle="@string/how_it_works_title"/>
