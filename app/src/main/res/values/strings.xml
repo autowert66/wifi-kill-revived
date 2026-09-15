@@ -72,5 +72,8 @@
     <string name="settings_replay_summary">Replays the welcome tour and the root check.</string>
     <string name="settings_license_title">License</string>
     <string name="settings_license_value">GPLv3</string>
+    <string name="settings_source_title">Source code</string>
+    <string name="settings_source_summary">View the project on GitHub</string>
+    <string name="settings_source_url" translatable="false">https://github.com/autowert66/wifi-kill-revived</string>
     <string name="settings_disclaimer_title">Legal disclaimer</string>
 </resources>

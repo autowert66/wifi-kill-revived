@@ -213,6 +213,21 @@
                                 app:dividerInsetStart="16dp"/>
 
                             <dev.a99.wifikill.ui.SettingsRowView
+                                android:id="@+id/sourceRow"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:rowChevron="true"
+                                app:rowIcon="@drawable/ic_ob_code"
+                                app:rowSummary="@string/settings_source_summary"
+                                app:rowTitle="@string/settings_source_title"/>
+
+                            <com.google.android.material.divider.MaterialDivider
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                app:dividerInsetEnd="16dp"
+                                app:dividerInsetStart="16dp"/>
+
+                            <dev.a99.wifikill.ui.SettingsRowView
                                 android:id="@+id/licenseRow"
                                 android:layout_width="match_parent"
                                 android:layout_height="wrap_content"

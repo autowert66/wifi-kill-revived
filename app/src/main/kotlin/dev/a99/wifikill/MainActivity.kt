@@ -3,6 +3,7 @@ package dev.a99.wifikill
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.View
@@ -98,6 +99,10 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.disclaimerRow.setOnRowClickListener { showDisclaimerDialog() }
+
+        binding.sourceRow.setOnRowClickListener {
+            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(getString(R.string.settings_source_url))))
+        }
 
         binding.howItWorksRow.setBodyView(
             SequenceStepsView(this).apply {
